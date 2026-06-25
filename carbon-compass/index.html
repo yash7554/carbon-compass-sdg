@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Carbon Compass — Know your footprint. Find your bearing.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0F1B17;
+    --surface: #16241F;
+    --surface-2: #1E322A;
+    --line: rgba(236,231,218,0.10);
+    --line-strong: rgba(236,231,218,0.18);
+    --text: #ECE7DA;
+    --text-dim: #9CAA9F;
+    --text-faint: #6B7A70;
+    --ember: #FF6B47;
+    --ember-dim: rgba(255,107,71,0.16);
+    --sage: #7FB069;
+    --sage-dim: rgba(127,176,105,0.16);
+    --ochre: #D9A441;
+    --ochre-dim: rgba(217,164,65,0.16);
+    --radius: 14px;
+  }
+
+  *{ box-sizing: border-box; }
+  html{ scroll-behavior: smooth; }
+  body{
+    margin:0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
+  }
+  body::before{
+    content:"";
+    position: fixed; inset:0;
+    background:
+      radial-gradient(circle at 12% 8%, rgba(127,176,105,0.07), transparent 40%),
+      radial-gradient(circle at 88% 92%, rgba(255,107,71,0.06), transparent 45%);
+    pointer-events:none;
+    z-index:0;
+  }
+
+  h1,h2,h3{ font-family:'Fraunces', serif; font-weight:600; letter-spacing:-0.01em; margin:0; }
+  .mono{ font-family:'JetBrains Mono', monospace; }
+  .eyebrow{
+    font-family:'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+  }
+
+  .wrap{ max-width: 1080px; margin: 0 auto; padding: 0 28px; position:relative; z-index:1; }
+
+  /* ---------- Header ---------- */
+  header{
+    border-bottom: 1px solid var(--line);
+    padding: 22px 0;
+    position: sticky; top:0;
+    background: rgba(15,27,23,0.86);
+    backdrop-filter: blur(10px);
+    z-index: 50;
+  }
+  .header-row{ display:flex; align-items:baseline; justify-content:space-between; }
+  .brand{ display:flex; align-items:baseline; gap:10px; }
+  .brand .mark{ font-size: 21px; font-weight:600; }
+  .brand .mark .dot{ color: var(--sage); }
+  .nav-tag{ font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--text-faint); letter-spacing:.08em; }
+
+  /* ---------- Hero ---------- */
+  .hero{ padding: 64px 0 40px; border-bottom: 1px solid var(--line); }
+  .hero h1{ font-size: 46px; line-height:1.08; max-width: 720px; }
+  .hero h1 em{ font-style: italic; color: var(--sage); font-weight:500; }
+  .hero p.lede{ max-width: 540px; color: var(--text-dim); font-size: 16px; margin-top:16px; }
+
+  /* ---------- Section shell ---------- */
+  section.block{ padding: 56px 0; border-bottom: 1px solid var(--line); }
+  section.block:last-of-type{ border-bottom: none; }
+  .block-head{ display:flex; align-items:flex-end; justify-content:space-between; gap: 24px; margin-bottom: 28px; flex-wrap: wrap; }
+  .block-head h2{ font-size: 26px; margin-top:6px; }
+
+  /* ---------- Panel / instrument card ---------- */
+  .panel{
+    background: var(--surface);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius);
+    padding: 28px;
+  }
+  .panel + .panel{ margin-top: 18px; }
+
+  /* ---------- Input grid ---------- */
+  .input-grid{ display:grid; grid-template-columns: repeat(2, 1fr); gap: 22px 28px; }
+  .field{ display:flex; flex-direction:column; gap:8px; }
+  .field label{ font-size: 13px; color: var(--text-dim); display:flex; justify-content:space-between; }
+  .field label .val{ font-family:'JetBrains Mono',monospace; color: var(--text); font-weight:500; }
+  .field input[type="range"]{
+    width:100%; height: 4px; -webkit-appearance:none; appearance:none;
+    background: var(--line-strong); border-radius: 4px; outline:none;
+  }
+  .field input[type="range"]::-webkit-slider-thumb{
+    -webkit-appearance:none; appearance:none; width:16px; height:16px; border-radius:50%;
+    background: var(--sage); border: 2px solid var(--bg); cursor:pointer;
+    box-shadow: 0 0 0 3px rgba(127,176,105,0.18);
+  }
+  .field input[type="range"]::-moz-range-thumb{
+    width:16px; height:16px; border-radius:50%; background: var(--sage); border: 2px solid var(--bg); cursor:pointer;
+  }
+  .field select{
+    background: var(--surface-2); color: var(--text); border: 1px solid var(--line-strong);
+    border-radius: 8px; padding: 10px 12px; font-family:'Inter',sans-serif; font-size:14px; outline:none;
+  }
+  .field .hint{ font-size: 11.5px; color: var(--text-faint); }
+  .toggle-row{ display:flex; gap:10px; }
+  .toggle-btn{
+    flex:1; padding: 10px 12px; border-radius:8px; border:1px solid var(--line-strong);
+    background: var(--surface-2); color: var(--text-dim); cursor:pointer; font-size:13px; font-family:'Inter',sans-serif;
+    transition: all .15s ease;
+  }
+  .toggle-btn.active{ background: var(--sage-dim); border-color: var(--sage); color: var(--text); }
+
+  .calc-btn{
+    margin-top: 26px; width:100%; padding: 15px;
+    background: var(--sage); color: #0F1B17; border:none; border-radius:10px;
+    font-family:'JetBrains Mono',monospace; font-size:13px; letter-spacing:.06em; text-transform:uppercase;
+    cursor:pointer; font-weight:700;
+    transition: transform .12s ease, background .15s ease;
+  }
+  .calc-btn:hover{ background:#92c47c; transform: translateY(-1px); }
+  .calc-btn:active{ transform: translateY(0); }
+
+  /* ---------- Results layout ---------- */
+  .results-grid{ display:grid; grid-template-columns: 380px 1fr; gap: 20px; align-items:start; }
+  .dial-readout{ text-align:center; }
+  .dial-readout .figure{ font-family:'JetBrains Mono',monospace; font-size: 13px; color: var(--text-dim); margin-top: 4px; }
+  .dial-readout .verdict{ margin-top: 14px; font-size: 14px; padding: 8px 14px; border-radius: 20px; display:inline-block; }
+  .legend{ display:flex; justify-content:center; gap:16px; margin-top: 18px; flex-wrap:wrap; }
+  .legend span{ display:flex; align-items:center; gap:6px; font-size:11.5px; color: var(--text-faint); font-family:'JetBrains Mono',monospace; }
+  .legend i{ width:8px; height:8px; border-radius:50%; display:inline-block; }
+
+  .breakdown-row{ display:flex; flex-direction:column; gap: 16px; }
+  .bar-item{ display:flex; flex-direction:column; gap:6px; }
+  .bar-item .bar-top{ display:flex; justify-content:space-between; font-size:13px; }
+  .bar-item .bar-top .name{ color: var(--text); }
+  .bar-item .bar-top .num{ font-family:'JetBrains Mono',monospace; color: var(--text-dim); }
+  .bar-track{ height:10px; border-radius:6px; background: var(--surface-2); overflow:hidden; }
+  .bar-fill{ height:100%; border-radius:6px; transition: width 1s cubic-bezier(.2,.8,.2,1); }
+
+  /* ---------- Insight cards ---------- */
+  .insight-grid{ display:grid; grid-template-columns: repeat(3,1fr); gap:16px; }
+  .insight-card{
+    background: var(--surface); border:1px solid var(--line-strong); border-radius: var(--radius);
+    padding: 22px; display:flex; flex-direction:column; gap: 12px;
+  }
+  .insight-card .rank{ font-family:'JetBrains Mono',monospace; font-size:11px; color: var(--text-faint); letter-spacing:.1em; }
+  .insight-card h3{ font-size: 17px; font-weight:600; }
+  .insight-card p{ font-size: 13.5px; color: var(--text-dim); margin:0; }
+  .insight-card .save{ margin-top:auto; font-family:'JetBrains Mono',monospace; font-size: 13px; color: var(--sage); padding-top:10px; border-top:1px solid var(--line); }
+
+  /* ---------- Chat / Ask the Compass ---------- */
+  .chat-window{ display:flex; flex-direction:column; gap:12px; max-height: 320px; overflow-y:auto; padding-right:4px; margin-bottom:16px; }
+  .msg{ max-width: 78%; padding: 11px 14px; border-radius: 12px; font-size: 13.5px; line-height:1.5; }
+  .msg.bot{ background: var(--surface-2); color: var(--text); align-self:flex-start; border-bottom-left-radius:3px; }
+  .msg.user{ background: var(--sage-dim); color: var(--text); align-self:flex-end; border-bottom-right-radius:3px; }
+  .chat-input-row{ display:flex; gap:10px; }
+  .chat-input-row input{
+    flex:1; background: var(--surface-2); border:1px solid var(--line-strong); border-radius:8px;
+    padding: 12px 14px; color: var(--text); font-family:'Inter',sans-serif; font-size:14px; outline:none;
+  }
+  .chat-input-row input:focus{ border-color: var(--sage); }
+  .chat-input-row button{
+    background: var(--surface-2); border:1px solid var(--line-strong); color: var(--text);
+    border-radius:8px; padding: 0 18px; cursor:pointer; font-family:'JetBrains Mono',monospace; font-size:12px;
+  }
+  .suggested-q{ display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
+  .suggested-q button{
+    background: transparent; border:1px solid var(--line-strong); color: var(--text-dim);
+    border-radius: 20px; padding: 7px 13px; font-size: 12px; cursor:pointer; font-family:'Inter',sans-serif;
+  }
+  .suggested-q button:hover{ border-color: var(--sage); color: var(--text); }
+
+  /* ---------- Goal & log ---------- */
+  .goal-grid{ display:grid; grid-template-columns: 1fr 1.3fr; gap: 20px; }
+  .sparkline-wrap{ margin-top: 6px; }
+  .log-table{ width:100%; border-collapse: collapse; font-size: 13px; margin-top: 10px;}
+  .log-table th{ text-align:left; color: var(--text-faint); font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.05em; padding: 8px 6px; border-bottom: 1px solid var(--line-strong); }
+  .log-table td{ padding: 9px 6px; border-bottom: 1px solid var(--line); color: var(--text-dim); }
+  .log-table td.del{ color: var(--ember); cursor:pointer; text-align:right; font-family:'JetBrains Mono',monospace; font-size:11px; }
+  .empty-log{ color: var(--text-faint); font-size: 13px; padding: 18px 0; text-align:center; }
+
+  /* ---------- Footer ---------- */
+  footer{ padding: 30px 0 50px; }
+  footer p{ color: var(--text-faint); font-size: 12.5px; max-width: 640px; }
+
+  .hidden{ display:none !important; }
+
+  @media (max-width: 760px){
+    .input-grid, .results-grid, .insight-grid, .goal-grid{ grid-template-columns: 1fr; }
+    .hero h1{ font-size: 34px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap header-row">
+    <div class="brand">
+      <span class="mark">CARBON<span class="dot">·</span>COMPASS</span>
+    </div>
+    <span class="nav-tag">CLIMATE ACTION · SDG 13 PROTOTYPE</span>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <section class="hero">
+    <p class="eyebrow">Personal emissions instrument</p>
+    <h1>Know your footprint.<br><em>Find your bearing.</em></h1>
+    <p class="lede">Carbon Compass turns five minutes of everyday habits — travel, power, food, flights, waste — into a single reading, then tells you which one change would move the needle most.</p>
+  </section>
+
+  <!-- ============ INPUT ============ -->
+  <section class="block" id="input-section">
+    <div class="block-head">
+      <div>
+        <p class="eyebrow">Step 1</p>
+        <h2>Take a reading</h2>
+      </div>
+      <span class="nav-tag">all data stays on this device</span>
+    </div>
+
+    <div class="panel">
+      <div class="input-grid">
+
+        <div class="field">
+          <label>Car / two-wheeler travel <span class="val mono" id="val-car">60 km/wk</span></label>
+          <input type="range" id="in-car" min="0" max="600" step="5" value="60">
+          <span class="hint">Private vehicle distance per week, all trips combined.</span>
+        </div>
+
+        <div class="field">
+          <label>Public transit travel <span class="val mono" id="val-transit">20 km/wk</span></label>
+          <input type="range" id="in-transit" min="0" max="400" step="5" value="20">
+          <span class="hint">Bus, train or metro distance per week.</span>
+        </div>
+
+        <div class="field">
+          <label>Household electricity <span class="val mono" id="val-elec">210 kWh/mo</span></label>
+          <input type="range" id="in-elec" min="0" max="1000" step="10" value="210">
+          <span class="hint">Your share of the home electricity bill.</span>
+        </div>
+
+        <div class="field">
+          <label>Electricity grid</label>
+          <select id="in-grid">
+            <option value="0.79" selected>India grid average (coal-heavy)</option>
+            <option value="0.45">Global average grid</option>
+            <option value="0.25">Renewable-heavy grid</option>
+            <option value="0.65">USA grid average</option>
+          </select>
+          <span class="hint">Emissions per kWh depend on how power is generated locally.</span>
+        </div>
+
+        <div class="field">
+          <label>Diet pattern</label>
+          <select id="in-diet">
+            <option value="3300">Meat-heavy, most meals</option>
+            <option value="2500" selected>Mixed, meat a few times a week</option>
+            <option value="1700">Vegetarian</option>
+            <option value="1500">Vegan</option>
+          </select>
+          <span class="hint">Food production is a major, often-overlooked source.</span>
+        </div>
+
+        <div class="field">
+          <label>Flights per year <span class="val mono" id="val-flights">1 short + 0 long</span></label>
+          <div style="display:flex; gap:10px;">
+            <input type="range" id="in-flights-short" min="0" max="10" step="1" value="1" style="flex:1">
+            <input type="range" id="in-flights-long" min="0" max="6" step="1" value="0" style="flex:1">
+          </div>
+          <span class="hint">Left slider: short-haul (&lt;3 hrs). Right slider: long-haul.</span>
+        </div>
+
+        <div class="field" style="grid-column: 1 / -1;">
+          <label>Waste habits</label>
+          <div class="toggle-row">
+            <div class="toggle-btn active" data-toggle="recycle" data-val="1">Recycle / compost regularly</div>
+            <div class="toggle-btn" data-toggle="recycle" data-val="0">Rarely sort or recycle waste</div>
+          </div>
+        </div>
+
+      </div>
+
+      <button class="calc-btn" id="btn-calc">Calculate footprint →</button>
+    </div>
+  </section>
+
+  <!-- ============ RESULTS ============ -->
+  <section class="block hidden" id="results-section">
+    <div class="block-head">
+      <div>
+        <p class="eyebrow">Step 2</p>
+        <h2>Your reading</h2>
+      </div>
+      <span class="nav-tag" id="reading-date"></span>
+    </div>
+
+    <div class="results-grid">
+      <div class="panel dial-readout">
+        <div id="dial-svg-holder"></div>
+        <div class="figure" id="dial-figure">— t CO₂e / year</div>
+        <div class="verdict" id="dial-verdict">—</div>
+        <div class="legend">
+          <span><i style="background:var(--sage)"></i>within 1.5°C target</span>
+          <span><i style="background:var(--ochre)"></i>above target</span>
+          <span><i style="background:var(--ember)"></i>above global average</span>
+        </div>
+      </div>
+
+      <div class="panel breakdown-row" id="breakdown-holder"></div>
+    </div>
+  </section>
+
+  <!-- ============ AI INSIGHTS ============ -->
+  <section class="block hidden" id="insights-section">
+    <div class="block-head">
+      <div>
+        <p class="eyebrow">Step 3 · AI recommendation engine</p>
+        <h2>Where to act first</h2>
+      </div>
+      <span class="nav-tag">ranked by potential impact</span>
+    </div>
+    <div class="insight-grid" id="insight-holder"></div>
+  </section>
+
+  <!-- ============ CHAT ============ -->
+  <section class="block hidden" id="chat-section">
+    <div class="block-head">
+      <div>
+        <p class="eyebrow">Step 4</p>
+        <h2>Ask the Compass</h2>
+      </div>
+      <span class="nav-tag">rule-based offline assistant</span>
+    </div>
+    <div class="panel">
+      <div class="chat-window" id="chat-window"></div>
+      <div class="chat-input-row">
+        <input type="text" id="chat-input" placeholder="e.g. What's my biggest source? How do I cut transport?">
+        <button id="chat-send">Ask</button>
+      </div>
+      <div class="suggested-q" id="suggested-q"></div>
+    </div>
+  </section>
+
+  <!-- ============ GOAL & LOG ============ -->
+  <section class="block hidden" id="goal-section">
+    <div class="block-head">
+      <div>
+        <p class="eyebrow">Step 5</p>
+        <h2>Set a target, track your trend</h2>
+      </div>
+      <span class="nav-tag">saved to this browser only</span>
+    </div>
+
+    <div class="goal-grid">
+      <div class="panel">
+        <div class="field">
+          <label>Reduction target <span class="val mono" id="val-target">15%</span></label>
+          <input type="range" id="in-target" min="5" max="60" step="5" value="15">
+          <span class="hint" id="target-hint">—</span>
+        </div>
+        <button class="calc-btn" id="btn-save-log" style="margin-top:18px; background:var(--surface-2); color:var(--text); border:1px solid var(--line-strong);">Save this reading to my log</button>
+      </div>
+
+      <div class="panel">
+        <p class="eyebrow" style="margin-bottom:10px;">Trend across saved readings</p>
+        <div class="sparkline-wrap" id="sparkline-holder"></div>
+        <table class="log-table" id="log-table">
+          <thead><tr><th>Date</th><th>Total (t CO₂e)</th><th>Biggest source</th><th></th></tr></thead>
+          <tbody id="log-body"></tbody>
+        </table>
+        <div class="empty-log hidden" id="empty-log">No readings saved yet — take one above.</div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p class="eyebrow" style="margin-bottom:8px;">Methodology</p>
+    <p>Emission factors are approximate, illustrative averages compiled from publicly available references (Our World in Data, UNEP Emissions Gap Report, EDGAR/JRC, IEA, UK DEFRA conversion factors) — not a certified carbon audit. Reference lines: India per-capita average ≈ 2.2 t CO₂/yr, global per-capita GHG average ≈ 6.4 t CO₂e/yr, 1.5°C-aligned individual target ≈ 2.3 t CO₂e/yr by 2030. All calculations run locally in your browser; no data leaves this device.</p>
+  </footer>
+
+</div>
+
+<script>
+(function(){
+
+  /* ---------------------------------------------------------
+     STATE
+  --------------------------------------------------------- */
+  var state = { recycle: 1, lastResult: null };
+  var STORAGE_KEY = 'carbonCompassLog';
+
+  var REF = { target: 2.3, india: 2.2, global: 6.4, maxScale: 14 };
+
+  var CATS = [
+    { key:'transport', label:'Transport',        color:'var(--ember)', hex:'#FF6B47' },
+    { key:'energy',    label:'Home energy',       color:'var(--ochre)', hex:'#D9A441' },
+    { key:'diet',      label:'Diet',              color:'var(--sage)',  hex:'#7FB069' },
+    { key:'flights',   label:'Flights',           color:'#8EA7D9',      hex:'#8EA7D9' },
+    { key:'waste',     label:'Waste',             color:'#B98ED9',      hex:'#B98ED9' }
+  ];
+
+  /* ---------------------------------------------------------
+     DOM HELPERS
+  --------------------------------------------------------- */
+  function $(id){ return document.getElementById(id); }
+  function on(id, ev, fn){ $(id).addEventListener(ev, fn); }
+
+  /* ---------------------------------------------------------
+     INPUT WIRING
+  --------------------------------------------------------- */
+  on('in-car','input', function(e){ $('val-car').textContent = e.target.value + ' km/wk'; });
+  on('in-transit','input', function(e){ $('val-transit').textContent = e.target.value + ' km/wk'; });
+  on('in-elec','input', function(e){ $('val-elec').textContent = e.target.value + ' kWh/mo'; });
+  function syncFlights(){
+    $('val-flights').textContent = $('in-flights-short').value + ' short + ' + $('in-flights-long').value + ' long';
+  }
+  on('in-flights-short','input', syncFlights);
+  on('in-flights-long','input', syncFlights);
+  on('in-target','input', function(e){ $('val-target').textContent = e.target.value + '%'; });
+
+  Array.prototype.forEach.call(document.querySelectorAll('[data-toggle="recycle"]'), function(btn){
+    btn.addEventListener('click', function(){
+      Array.prototype.forEach.call(document.querySelectorAll('[data-toggle="recycle"]'), function(b){ b.classList.remove('active'); });
+      btn.classList.add('active');
+      state.recycle = parseInt(btn.getAttribute('data-val'), 10);
+    });
+  });
+
+  /* ---------------------------------------------------------
+     CALCULATION ENGINE
+  --------------------------------------------------------- */
+  function calculate(){
+    var carKm = parseFloat($('in-car').value);
+    var transitKm = parseFloat($('in-transit').value);
+    var elecKwh = parseFloat($('in-elec').value);
+    var gridFactor = parseFloat($('in-grid').value);
+    var dietAnnualKg = parseFloat($('in-diet').value);
+    var shortFlights = parseFloat($('in-flights-short').value);
+    var longFlights = parseFloat($('in-flights-long').value);
+
+    var transportKg = (carKm * 0.18 + transitKm * 0.05) * 52;
+    var energyKg = elecKwh * gridFactor * 12;
+    var dietKg = dietAnnualKg;
+    var flightsKg = shortFlights * 250 + longFlights * 1100;
+    var wasteKg = state.recycle === 1 ? 50 : 150;
+
+    var totalKg = transportKg + energyKg + dietKg + flightsKg + wasteKg;
+
+    return {
+      date: new Date(),
+      totalKg: totalKg,
+      totalT: totalKg / 1000,
+      breakdown: {
+        transport: transportKg,
+        energy: energyKg,
+        diet: dietKg,
+        flights: flightsKg,
+        waste: wasteKg
+      },
+      inputs: { carKm: carKm, transitKm: transitKm, elecKwh: elecKwh, gridFactor: gridFactor,
+                dietAnnualKg: dietAnnualKg, shortFlights: shortFlights, longFlights: longFlights, recycle: state.recycle }
+    };
+  }
+
+  /* ---------------------------------------------------------
+     SVG GAUGE  ("the dial")
+  --------------------------------------------------------- */
+  function polarToCartesian(cx, cy, r, angleDeg){
+    var a = (angleDeg - 90) * Math.PI / 180;
+    return { x: cx + r * Math.cos(a), y: cy + r * Math.sin(a) };
+  }
+  function describeArc(cx, cy, r, startAngle, endAngle){
+    var start = polarToCartesian(cx, cy, r, endAngle);
+    var end = polarToCartesian(cx, cy, r, startAngle);
+    var largeArc = (endAngle - startAngle) <= 180 ? "0" : "1";
+    return ["M", start.x, start.y, "A", r, r, 0, largeArc, 0, end.x, end.y].join(" ");
+  }
+  function valueToAngle(v){
+    var clamped = Math.max(0, Math.min(REF.maxScale, v));
+    return (clamped / REF.maxScale) * 180; // 0..180, mapped onto -90..90 by polarToCartesian
+  }
+
+  function renderDial(totalT){
+    var cx = 170, cy = 175, r = 140, rInner = 118;
+    var targetAngle = valueToAngle(REF.target);
+    var globalAngle = valueToAngle(REF.global);
+    var needleAngle = valueToAngle(totalT) - 90; // for rotation transform
+
+    var bandSage = describeArc(cx, cy, r, 0, targetAngle);
+    var bandOchre = describeArc(cx, cy, r, targetAngle, globalAngle);
+    var bandEmber = describeArc(cx, cy, r, globalAngle, 180);
+
+    function tick(value, label){
+      var ang = valueToAngle(value);
+      var outer = polarToCartesian(cx, cy, r + 10, ang);
+      var inner = polarToCartesian(cx, cy, r - 6, ang);
+      var labelPos = polarToCartesian(cx, cy, r + 26, ang);
+      return '<line x1="'+inner.x+'" y1="'+inner.y+'" x2="'+outer.x+'" y2="'+outer.y+'" stroke="rgba(236,231,218,0.45)" stroke-width="1.5"/>' +
+             '<text x="'+labelPos.x+'" y="'+labelPos.y+'" fill="#9CAA9F" font-size="9.5" font-family="JetBrains Mono, monospace" text-anchor="middle">'+label+'</text>';
+    }
+
+    var needleLen = r - 28;
+    var needleTip = polarToCartesian(cx, cy, needleLen, valueToAngle(totalT));
+
+    var svg = ''+
+    '<svg viewBox="0 0 340 200" width="100%" style="max-width:340px;">' +
+      '<path d="'+bandSage+'" stroke="#7FB069" stroke-width="20" fill="none" stroke-linecap="butt" opacity="0.9"/>' +
+      '<path d="'+bandOchre+'" stroke="#D9A441" stroke-width="20" fill="none" stroke-linecap="butt" opacity="0.9"/>' +
+      '<path d="'+bandEmber+'" stroke="#FF6B47" stroke-width="20" fill="none" stroke-linecap="butt" opacity="0.9"/>' +
+      tick(REF.target, 'TARGET') +
+      tick(REF.india, 'IN AVG') +
+      tick(REF.global, 'GLOBAL') +
+      '<circle cx="'+cx+'" cy="'+cy+'" r="5" fill="#ECE7DA"/>' +
+      '<line x1="'+cx+'" y1="'+cy+'" x2="'+needleTip.x+'" y2="'+needleTip.y+'" stroke="#ECE7DA" stroke-width="3" stroke-linecap="round"/>' +
+    '</svg>';
+
+    $('dial-svg-holder').innerHTML = svg;
+    $('dial-figure').textContent = totalT.toFixed(2) + ' t CO₂e / year';
+
+    var verdict, verdictBg, verdictColor;
+    if (totalT <= REF.target){ verdict = 'Within the 1.5°C-aligned target — well done.'; verdictBg='var(--sage-dim)'; verdictColor='var(--sage)'; }
+    else if (totalT <= REF.global){ verdict = 'Above target, below the global average.'; verdictBg='var(--ochre-dim)'; verdictColor='var(--ochre)'; }
+    else { verdict = 'Above the global average — meaningful room to cut.'; verdictBg='var(--ember-dim)'; verdictColor='var(--ember)'; }
+    var v = $('dial-verdict');
+    v.textContent = verdict;
+    v.style.background = verdictBg;
+    v.style.color = verdictColor;
+  }
+
+  /* ---------------------------------------------------------
+     BREAKDOWN BARS
+  --------------------------------------------------------- */
+  function renderBreakdown(result){
+    var total = result.totalKg;
+    var html = '';
+    CATS.forEach(function(cat){
+      var kg = result.breakdown[cat.key];
+      var pct = total > 0 ? (kg / total * 100) : 0;
+      html += '<div class="bar-item">' +
+        '<div class="bar-top"><span class="name">'+cat.label+'</span><span class="num">'+Math.round(kg)+' kg · '+pct.toFixed(0)+'%</span></div>' +
+        '<div class="bar-track"><div class="bar-fill" style="width:0%; background:'+cat.hex+'" data-w="'+pct+'"></div></div>' +
+      '</div>';
+    });
+    $('breakdown-holder').innerHTML = html;
+    var raf = window.requestAnimationFrame || function(cb){ return setTimeout(cb, 16); };
+    raf(function(){
+      Array.prototype.forEach.call(document.querySelectorAll('.bar-fill'), function(el){
+        el.style.width = el.getAttribute('data-w') + '%';
+      });
+    });
+  }
+
+  /* ---------------------------------------------------------
+     AI INSIGHT ENGINE (rule-based recommendation generator)
+  --------------------------------------------------------- */
+  function generateInsights(result){
+    var b = result.breakdown;
+    var ranked = CATS.map(function(c){ return { key:c.key, label:c.label, kg:b[c.key] }; })
+                      .sort(function(a,b){ return b.kg - a.kg; });
+
+    var rules = {
+      transport: function(kg, inp){
+        var cutKm = inp.carKm * 0.3;
+        var save = cutKm * 0.18 * 52;
+        return { title:'Shift 30% of car trips to transit', body:'Swapping roughly '+Math.round(cutKm)+' km/week of driving for bus, metro or carpooling cuts this category meaningfully without changing your routine much.', save: save };
+      },
+      energy: function(kg, inp){
+        var save = kg * 0.2;
+        return { title:'Trim peak electricity load by 20%', body:'LED lighting, efficient appliances and shifting heavy usage off peak hours typically cut household electricity emissions by a fifth.', save: save };
+      },
+      diet: function(kg, inp){
+        var save = kg * 0.25;
+        return { title:'Add 2 plant-based days per week', body:'Diet is one of the few categories you can change today. Two extra plant-based days a week meaningfully lowers food-related emissions.', save: save };
+      },
+      flights: function(kg, inp){
+        var save = inp.shortFlights * 250 * 0.5;
+        return { title:'Replace one short-haul flight with rail/video call', body:'Short-haul flights are disproportionately carbon-intensive for the distance covered. Swapping even one for a train trip or a virtual meeting adds up fast.', save: save };
+      },
+      waste: function(kg, inp){
+        var save = inp.recycle === 1 ? 0 : 100;
+        return { title:'Start sorting recyclables & compost', body:'Diverting recyclables and food waste from landfill is the lowest-effort change on this list, and still worth doing consistently.', save: save };
+      }
+    };
+
+    var top = ranked.slice(0,3).filter(function(r){ return r.kg > 0; });
+    var html = '';
+    top.forEach(function(r, i){
+      var rule = rules[r.key](r.kg, result.inputs);
+      html += '<div class="insight-card">' +
+        '<span class="rank">PRIORITY '+(i+1)+' · '+r.label.toUpperCase()+'</span>' +
+        '<h3>'+rule.title+'</h3>' +
+        '<p>'+rule.body+'</p>' +
+        '<span class="save">≈ saves '+Math.round(rule.save)+' kg CO₂e / year</span>' +
+      '</div>';
+    });
+    $('insight-holder').innerHTML = html;
+  }
+
+  /* ---------------------------------------------------------
+     ASK THE COMPASS (rule-based chat assistant)
+  --------------------------------------------------------- */
+  var suggestedQuestions = [
+    "What's my biggest source?",
+    "How far am I from the target?",
+    "How do I cut my transport footprint?",
+    "Compare me to the global average"
+  ];
+
+  function pushMsg(text, who){
+    var div = document.createElement('div');
+    div.className = 'msg ' + who;
+    div.textContent = text;
+    $('chat-window').appendChild(div);
+    $('chat-window').scrollTop = $('chat-window').scrollHeight;
+  }
+
+  function answerQuestion(q){
+    var r = state.lastResult;
+    if (!r) return "Take a reading first, then I can answer using your actual numbers.";
+    var lower = q.toLowerCase();
+    var ranked = CATS.map(function(c){ return { label:c.label, kg:r.breakdown[c.key] }; }).sort(function(a,b){return b.kg-a.kg;});
+    var biggest = ranked[0];
+
+    if (lower.indexOf('biggest') > -1 || lower.indexOf('largest') > -1 || lower.indexOf('most') > -1){
+      return 'Your biggest source is '+biggest.label.toLowerCase()+' at '+Math.round(biggest.kg)+' kg CO₂e/year — about '+Math.round(biggest.kg/r.totalKg*100)+'% of your total.';
+    }
+    if (lower.indexOf('target') > -1 || lower.indexOf('far') > -1){
+      var diff = r.totalT - REF.target;
+      if (diff <= 0) return "You're already at or below the 2.3 t target — nice work. Keep an eye on flights and electricity, they tend to creep up first.";
+      return "You're "+diff.toFixed(2)+" t CO₂e above the 2.3 t/year target. Closing roughly "+Math.round(biggest.kg*0.3)+" kg from "+biggest.label.toLowerCase()+" alone would get you noticeably closer.";
+    }
+    if (lower.indexOf('transport') > -1 || lower.indexOf('car') > -1 || lower.indexOf('drive') > -1){
+      return 'Transport is currently '+Math.round(r.breakdown.transport)+' kg/year. Try carpooling, public transit, or combining errands into fewer trips — cutting weekly car km by a third is usually the single highest-leverage change.';
+    }
+    if (lower.indexOf('global') > -1 || lower.indexOf('compare') > -1 || lower.indexOf('average') > -1){
+      var vsGlobal = ((r.totalT / REF.global) * 100).toFixed(0);
+      return 'Your footprint is '+r.totalT.toFixed(2)+' t CO₂e/year — that\'s '+vsGlobal+'% of the global per-capita average (6.4 t) and '+((r.totalT/REF.india)*100).toFixed(0)+'% of the India average (2.2 t).';
+    }
+    if (lower.indexOf('flight') > -1 || lower.indexOf('fly') > -1){
+      return 'Flights are contributing '+Math.round(r.breakdown.flights)+' kg/year. Long-haul flights are the heaviest single-trip emitters in this entire model — even one fewer per year has an outsized effect.';
+    }
+    if (lower.indexOf('diet') > -1 || lower.indexOf('food') > -1 || lower.indexOf('meat') > -1){
+      return 'Your diet category is '+Math.round(r.breakdown.diet)+' kg/year. Shifting one or two meals a day toward plant-based options is usually the easiest lever in the entire footprint.';
+    }
+    if (lower.indexOf('hi') > -1 || lower.indexOf('hello') > -1 || lower.indexOf('hey') > -1){
+      return "Hi — ask me about your biggest source, how far you are from target, or how to cut transport, diet or flight emissions.";
+    }
+    return "I can answer questions about your biggest source, your distance from the 1.5°C target, or how to reduce transport, diet, electricity or flight emissions. Try one of the suggested questions below.";
+  }
+
+  function renderSuggested(){
+    $('suggested-q').innerHTML = suggestedQuestions.map(function(q){ return '<button>'+q+'</button>'; }).join('');
+    Array.prototype.forEach.call(document.querySelectorAll('#suggested-q button'), function(btn){
+      btn.addEventListener('click', function(){ handleUserQuestion(btn.textContent); });
+    });
+  }
+
+  function handleUserQuestion(q){
+    if (!q.trim()) return;
+    pushMsg(q, 'user');
+    $('chat-input').value = '';
+    setTimeout(function(){ pushMsg(answerQuestion(q), 'bot'); }, 250);
+  }
+
+  on('chat-send','click', function(){ handleUserQuestion($('chat-input').value); });
+  on('chat-input','keydown', function(e){ if (e.key === 'Enter') handleUserQuestion($('chat-input').value); });
+
+  /* ---------------------------------------------------------
+     GOAL + LOG (localStorage)
+  --------------------------------------------------------- */
+  function loadLog(){
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch(e){ return []; }
+  }
+  function saveLog(entries){
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(entries)); } catch(e){}
+  }
+
+  function renderSparkline(entries){
+    if (entries.length < 2){
+      $('sparkline-holder').innerHTML = '<p style="color:var(--text-faint); font-size:13px;">Save at least two readings to see a trend line.</p>';
+      return;
+    }
+    var w = 460, h = 90, pad = 12;
+    var values = entries.map(function(e){ return e.totalT; });
+    var min = Math.min.apply(null, values), max = Math.max.apply(null, values);
+    if (max === min) max = min + 1;
+    var pts = values.map(function(v, i){
+      var x = pad + (i / (values.length - 1)) * (w - pad*2);
+      var y = h - pad - ((v - min) / (max - min)) * (h - pad*2);
+      return x.toFixed(1) + ',' + y.toFixed(1);
+    }).join(' ');
+    var svg = '<svg viewBox="0 0 '+w+' '+h+'" width="100%" style="max-width:'+w+'px;">' +
+      '<polyline points="'+pts+'" fill="none" stroke="#7FB069" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>' +
+      '</svg>';
+    $('sparkline-holder').innerHTML = svg;
+  }
+
+  function renderLog(){
+    var entries = loadLog();
+    if (entries.length === 0){
+      $('log-body').innerHTML = '';
+      $('empty-log').classList.remove('hidden');
+      $('log-table').classList.add('hidden');
+      renderSparkline(entries);
+      return;
+    }
+    $('empty-log').classList.add('hidden');
+    $('log-table').classList.remove('hidden');
+    var html = '';
+    entries.slice().reverse().forEach(function(e, idx){
+      var realIdx = entries.length - 1 - idx;
+      html += '<tr><td>'+e.date+'</td><td class="mono">'+e.totalT.toFixed(2)+'</td><td>'+e.biggest+'</td><td class="del" data-idx="'+realIdx+'">remove</td></tr>';
+    });
+    $('log-body').innerHTML = html;
+    Array.prototype.forEach.call(document.querySelectorAll('.del'), function(td){
+      td.addEventListener('click', function(){
+        var entries2 = loadLog();
+        entries2.splice(parseInt(td.getAttribute('data-idx'),10), 1);
+        saveLog(entries2);
+        renderLog();
+      });
+    });
+    renderSparkline(entries);
+  }
+
+  on('btn-save-log','click', function(){
+    if (!state.lastResult) return;
+    var entries = loadLog();
+    var ranked = CATS.map(function(c){ return { label:c.label, kg:state.lastResult.breakdown[c.key] }; }).sort(function(a,b){return b.kg-a.kg;});
+    entries.push({
+      date: state.lastResult.date.toLocaleDateString(),
+      totalT: state.lastResult.totalT,
+      biggest: ranked[0].label
+    });
+    saveLog(entries);
+    renderLog();
+  });
+
+  function updateTargetHint(){
+    var pct = parseInt($('in-target').value, 10);
+    if (!state.lastResult){ $('target-hint').textContent = 'Take a reading to see what this target means in tonnes.'; return; }
+    var goalT = state.lastResult.totalT * (1 - pct/100);
+    $('target-hint').textContent = 'A '+pct+'% cut brings you to ≈ '+goalT.toFixed(2)+' t CO₂e/year.';
+  }
+  on('in-target','input', updateTargetHint);
+
+  /* ---------------------------------------------------------
+     MAIN RUN
+  --------------------------------------------------------- */
+  on('btn-calc','click', function(){
+    var result = calculate();
+    state.lastResult = result;
+
+    $('results-section').classList.remove('hidden');
+    $('insights-section').classList.remove('hidden');
+    $('chat-section').classList.remove('hidden');
+    $('goal-section').classList.remove('hidden');
+
+    $('reading-date').textContent = result.date.toLocaleString();
+    renderDial(result.totalT);
+    renderBreakdown(result);
+    generateInsights(result);
+    updateTargetHint();
+
+    if ($('chat-window').children.length === 0){
+      pushMsg("Reading complete — "+result.totalT.toFixed(2)+" t CO₂e/year. Ask me anything about it.", 'bot');
+      renderSuggested();
+    } else {
+      pushMsg("Updated reading: "+result.totalT.toFixed(2)+" t CO₂e/year.", 'bot');
+    }
+
+    $('results-section').scrollIntoView({ behavior:'smooth', block:'start' });
+  });
+
+  renderLog();
+
+})();
+</script>
+</body>
+</html>
